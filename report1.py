@@ -38,7 +38,7 @@ def set_frequency(function_generator_ip, frequency):
     #Now check the frequency
 
 def get_amplitude(oscope_ip) -> float:
-    query = ':MEAS:VAMP?'
+    query = ':MEAS:VAMP? CHAN1'
     response = send_query(oscope_ip, PORT, query)
     print(f"Amplitude is {response} V")
     return float(response)

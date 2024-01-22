@@ -75,7 +75,7 @@ func_gen_socket = connect_to_device(FUNC_GEN_IP, PORT)
 #set_frequency(func_gen_socket, frequency)
 #get_amplitude(scope_socket)
 
-data = bode_data(func_gen_socket, scope_socket, 100, 1000, 10)
+data = bode_data(func_gen_socket, scope_socket, 100, 3000, 25)
 
 plot_bode(data)
 

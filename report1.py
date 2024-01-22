@@ -5,59 +5,69 @@ import time
 
 
 PORT = 5555
+SCOPE_IP = "10.245.26.153"
+FUNC_GEN_IP = "10.245.26.150"
 
-def send_query(ip, port, message, protocol=socket.SOCK_STREAM):
-    with socket.socket(socket.AF_INET, protocol) as s:
-        s.settimeout(5)
-        try:
-            s.connect((ip, port))
-            s.sendall(message.encode() + b'\n')
-            data = s.recv(1024)
-            return data.decode()
-        except socket.timeout:
-            return "No response (timeout)"
-        except socket.error as err:
-            return f"Connection error: {err}"
-def send_command(ip,port,message,protocol=socket.SOCK_STREAM):
-    # same as above except do not expect a response
-    with socket.socket(socket.AF_INET, protocol) as s:
+def connect_to_device(ip, port, protocol=socket.SOCK_STREAM):
+    s = socket.socket(socket.AF_INET, protocol)
+    s.settimeout(5)
+    try:
         s.connect((ip, port))
+        return s
+    except socket.error as err:
+        print(f"Connection error: {err}")
+        return None
+
+def disconnect_from_device(s):
+    s.close()
+
+def send_query(s, message):
+    try:
         s.sendall(message.encode() + b'\n')
+        data = s.recv(1024)
+        return data.decode()
+    except socket.timeout:
+        return "No response (timeout)"
+    except socket.error as err:
+        return f"Connection error: {err}"
+
+def send_command(s, message):
+    s.sendall(message.encode() + b'\n')
     return f"Command {message} sent"
 
 # IP and port of the device
-scope_ip = "10.245.26.153"
-func_gen_ip = "10.245.26.150"
 
 frequency = 800  # Frequency in Hz
 command = f':SOUR1:FREQ {frequency}'
 
-def set_frequency(function_generator_ip, frequency):
+def set_frequency(s, frequency):
     command = f':SOUR1:FREQ {frequency}'
-    send_command(function_generator_ip, PORT, command)    
+    send_command(s, command)    
     #Now check the frequency
 
-def get_amplitude(oscope_ip) -> float:
+def get_amplitude(s) -> float:
     query = ':MEAS:VAMP? CHAN1'
-    response = send_query(oscope_ip, PORT, query)
+    response = send_query(s, query)
     print(f"Amplitude is {response} V")
     return float(response)
 
-def get_phase(oscope_ip) -> float:
-    query = ':MEAS:VPH?'
-    response = send_query(oscope_ip, PORT, query)
-    print(f"Phase is {response} deg")
-    return float(response)
+# Connect to devices
+scope_socket = connect_to_device(scope_ip, PORT)
+func_gen_socket = connect_to_device(func_gen_ip, PORT)
+
+# Send commands and queries
+# ...
+
+
 # Try with TCP
-def bode_data(fg_ip, o_ip, start, stop, step):
+def bode_data(fg_s, o_s, start, stop, step):
     freq = np.arange(start, stop, step)
     amp = []
     phase = []
     for f in freq:
-        set_frequency(fg_ip, f)
+        set_frequency(fg_s, f)
         time.sleep(0.1)
-        amp.append(get_amplitude(o_ip))
-        phase.append(get_phase(o_ip))
+        amp.append(get_amplitude(o_s))
         time.sleep(0.1)
     return {'freq': freq, 'amp': amp, 'phase': phase}
 
@@ -70,9 +80,9 @@ def plot_bode(data):
     ax[1].set_xlabel('Frequency (Hz)')
     return fig, ax
 
-set_frequency(func_gen_ip, frequency)
-get_amplitude(scope_ip)
+set_frequency(func_gen_socket, frequency)
+get_amplitude(scope_socket)
 
-# w0 = 723
-#data = bode_data(func_gen_ip, scope_ip, 0, 2000, 1)
-#plot_bode(data)
+# Disconnect from devices
+disconnect_from_device(scope_socket)
+disconnect_from_device(func_gen_socket)

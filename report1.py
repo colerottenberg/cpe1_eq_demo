@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-
 PORT = 5555
 SCOPE_IP = "10.245.26.153"
 FUNC_GEN_IP = "10.245.26.150"
@@ -47,15 +46,6 @@ def get_amplitude(s) -> float:
     print(f"Amplitude is {response} V")
     return float(response)
 
-# Connect to devices
-scope_socket = connect_to_device(scope_ip, PORT)
-func_gen_socket = connect_to_device(func_gen_ip, PORT)
-
-# Send commands and queries
-# ...
-
-
-# Try with TCP
 def bode_data(fg_s, o_s, start, stop, step):
     freq = np.arange(start, stop, step)
     amp = []
@@ -77,6 +67,10 @@ def plot_bode(data):
     return fig, ax
 
 # IP and port of the device
+
+# Connect to devices
+scope_socket = connect_to_device(SCOPE_IP, PORT)
+func_gen_socket = connect_to_device(FUNC_GEN_IP, PORT)
 
 frequency = 800  # Frequency in Hz
 command = f':SOUR1:FREQ {frequency}'

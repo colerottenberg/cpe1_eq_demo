@@ -35,10 +35,6 @@ def send_command(s, message):
     s.sendall(message.encode() + b'\n')
     return f"Command {message} sent"
 
-# IP and port of the device
-
-frequency = 800  # Frequency in Hz
-command = f':SOUR1:FREQ {frequency}'
 
 def set_frequency(s, frequency):
     command = f':SOUR1:FREQ {frequency}'
@@ -79,6 +75,11 @@ def plot_bode(data):
     ax[1].set_ylabel('Phase (deg)')
     ax[1].set_xlabel('Frequency (Hz)')
     return fig, ax
+
+# IP and port of the device
+
+frequency = 800  # Frequency in Hz
+command = f':SOUR1:FREQ {frequency}'
 
 set_frequency(func_gen_socket, frequency)
 get_amplitude(scope_socket)

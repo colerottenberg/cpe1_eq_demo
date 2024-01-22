@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import time
 
 PORT = 5555
-SCOPE_IP = "10.245.26.153"
-FUNC_GEN_IP = "10.245.26.150"
+SCOPE_IP = "10.245.26.102"
+FUNC_GEN_IP = "10.245.26.230"
 
 def connect_to_device(ip, port, protocol=socket.SOCK_STREAM):
     s = socket.socket(socket.AF_INET, protocol)
@@ -49,22 +49,19 @@ def get_amplitude(s) -> float:
 def bode_data(fg_s, o_s, start, stop, step):
     freq = np.arange(start, stop, step)
     amp = []
-    phase = []
     for f in freq:
         set_frequency(fg_s, f)
-        time.sleep(0.1)
         amp.append(get_amplitude(o_s))
         time.sleep(0.1)
-    return {'freq': freq, 'amp': amp, 'phase': phase}
+    return {'freq': freq, 'amp': amp}
 
 def plot_bode(data):
-    fig, ax = plt.subplots(2, 1, sharex=True)
-    ax[0].semilogx(data['freq'], data['amp'])
-    ax[0].set_ylabel('Amplitude (V)')
-    ax[1].semilogx(data['freq'], data['phase'])
-    ax[1].set_ylabel('Phase (deg)')
-    ax[1].set_xlabel('Frequency (Hz)')
-    return fig, ax
+    plt.plot(data['freq'], np.log(data['amp']))
+    plt.ylabel('Power (dB)')
+    plt.xlabel('Frequency (Hz)')
+    plt.title('Bode Plot')
+    plt.savefig('bode.png')
+    plt.show() 
 
 # IP and port of the device
 
@@ -72,11 +69,15 @@ def plot_bode(data):
 scope_socket = connect_to_device(SCOPE_IP, PORT)
 func_gen_socket = connect_to_device(FUNC_GEN_IP, PORT)
 
-frequency = 800  # Frequency in Hz
-command = f':SOUR1:FREQ {frequency}'
+# frequency = 800  # Frequency in Hz
+# command = f':SOUR1:FREQ {frequency}'
 
-set_frequency(func_gen_socket, frequency)
-get_amplitude(scope_socket)
+#set_frequency(func_gen_socket, frequency)
+#get_amplitude(scope_socket)
+
+data = bode_data(func_gen_socket, scope_socket, 100, 1000, 10)
+
+plot_bode(data)
 
 # Disconnect from devices
 disconnect_from_device(scope_socket)
